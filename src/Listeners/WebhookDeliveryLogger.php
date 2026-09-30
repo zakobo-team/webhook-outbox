@@ -11,7 +11,7 @@ use Spatie\WebhookServer\Events\WebhookCallEvent;
 use Spatie\WebhookServer\Events\WebhookCallFailedEvent;
 use Spatie\WebhookServer\Events\WebhookCallSucceededEvent;
 
-final class WebhookDeliveryLogger
+class WebhookDeliveryLogger
 {
     public function handleDispatchingWebhookCallEvent(DispatchingWebhookCallEvent $event): void
     {
@@ -33,7 +33,7 @@ final class WebhookDeliveryLogger
         $this->log('critical', 'Webhook final delivery failed.', $event);
     }
 
-    private function log(string $level, string $message, DispatchingWebhookCallEvent|WebhookCallEvent $event): void
+    protected function log(string $level, string $message, DispatchingWebhookCallEvent|WebhookCallEvent $event): void
     {
         if (! $this->isOurs($event->meta)) {
             return;
@@ -53,7 +53,7 @@ final class WebhookDeliveryLogger
     /**
      * @return array<string, mixed>
      */
-    private function context(DispatchingWebhookCallEvent|WebhookCallEvent $event): array
+    protected function context(DispatchingWebhookCallEvent|WebhookCallEvent $event): array
     {
         $meta = $event->meta;
         $callerLogContext = array_diff_key($meta, array_flip(['event', 'event_id', 'subscriber']));

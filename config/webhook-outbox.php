@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Zakobo\WebhookOutbox\Actions\RelayWebhookOutboxAction;
+use Zakobo\WebhookOutbox\Listeners\WebhookDeliveryLogger;
+
 return [
     /*
      * Database connection holding the outbox table. Null uses the application's default connection. Every
@@ -20,6 +23,15 @@ return [
      * Outbox message bodies can carry personal data, so rows are pruned after this many days.
      */
     'prune_after_days' => 90,
+
+    /*
+     * Classes the package resolves from the container. A replacement must extend the listed class, like the
+     * `signer` and `webhook_job` keys of spatie/laravel-webhook-server.
+     */
+    'classes' => [
+        'relay_action' => RelayWebhookOutboxAction::class,
+        'delivery_logger' => WebhookDeliveryLogger::class,
+    ],
 
     /*
      * Each subscriber declares which webhook events it receives via `events`: either the string '*' (every

@@ -57,6 +57,8 @@ migration. The package never loads its migration on its own.
 | `header_prefix`    | `X-Zakobo-Webhook`               | Delivery headers are `{prefix}-Event` and `{prefix}-Subscriber`.                  |
 | `prune_after_days` | `90`                             | Rows older than this are pruned (bodies can carry personal data).                 |
 | `subscribers`      | `[]`                             | Receivers, keyed by name.                                                         |
+| `classes.relay_action` | `RelayWebhookOutboxAction`   | Class that builds and dispatches each webhook call. A replacement must extend it. |
+| `classes.delivery_logger` | `WebhookDeliveryLogger`   | Class that logs Spatie's webhook events. A replacement must extend it.            |
 
 Each subscriber declares its `url`, its `signing_secret` and the `events` it receives: `'*'` for every event, or a list
 of event names. A subscriber with an empty `url` is skipped, so a receiver can be switched off per environment. A URL
@@ -153,6 +155,80 @@ The package does schedule the prune: `model:prune` for `Zakobo\WebhookOutbox\Mod
 without overlapping, deleting rows older than `prune_after_days`.
 
 The scheduler (`schedule:work` or a `schedule:run` cron entry) and a queue worker must be running.
+
+## Extending
+
+Like spatie/laravel-webhook-server's `signer` and `webhook_job` keys, `config/webhook-outbox.php` has a `classes` array
+naming the classes the package resolves from the container:
+
+```php
+'classes' => [
+    'relay_action' => RelayWebhookOutboxAction::class,
+    'delivery_logger' => WebhookDeliveryLogger::class,
+],
+```
+
+A replacement must extend the listed class. Anything else, including a class that does not exist, fails the application
+boot with an `InvalidWebhookConfigException`. Protected methods are the extension API; everything private is not.
+
+### The webhook call
+
+Override `webhookCallFor()` to change how each call is dispatched: queue, timeout, tries, backoff, proxy or mTLS, extra
+headers, tags, HTTP verb. Call the parent first and keep customizing the returned Spatie `WebhookCall`:
+
+```php
+use Spatie\WebhookServer\WebhookCall;
+use Zakobo\WebhookOutbox\Actions\RelayWebhookOutboxAction;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\ValueObjects\Subscriber;
+
+class AppRelayWebhookOutboxAction extends RelayWebhookOutboxAction
+{
+    protected function webhookCallFor(WebhookOutboxMessage $outboxMessage, Subscriber $subscriber): WebhookCall
+    {
+        $webhookCall = parent::webhookCallFor($outboxMessage, $subscriber);
+
+        if ($subscriber->name === 'accounting') {
+            return $webhookCall->onQueue('webhooks-slow')->timeoutInSeconds(60);
+        }
+
+        return $webhookCall;
+    }
+}
+```
+
+The fast path after commit, the `webhooks:relay` sweep and `webhooks:replay` all go through the relay action, so an
+override applies to all three.
+
+**An override must not change the payload or the signing.** A replay resends the stored body byte-for-byte, and
+receivers verify the `Signature` header against it. The package also applies the call's meta itself, after
+`webhookCallFor()` returns, so the outcome recorder and the delivery logger always get their `outbox_message_id`,
+`event_id` and `subscriber` even if an override sets its own meta.
+
+`execute()` is `final`; locking, row selection, dead-lettering and marking rows enqueued stay private to the package.
+
+### The delivery logger
+
+Override `log()` to change the channel or the levels, `context()` to change the fields, or any of the four `handle…`
+methods:
+
+```php
+use Illuminate\Support\Facades\Log;
+use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;
+use Spatie\WebhookServer\Events\WebhookCallEvent;
+use Zakobo\WebhookOutbox\Listeners\WebhookDeliveryLogger;
+
+class AppWebhookDeliveryLogger extends WebhookDeliveryLogger
+{
+    protected function log(string $level, string $message, DispatchingWebhookCallEvent|WebhookCallEvent $event): void
+    {
+        Log::channel('webhooks')->{$level}($message, $this->context($event));
+    }
+}
+```
+
+The listeners are registered against the configured class, so the replacement receives Spatie's events. Events from
+webhook calls that did not come from the outbox are still ignored.
 
 ## Receiver contract
 

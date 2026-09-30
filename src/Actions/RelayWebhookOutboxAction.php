@@ -14,17 +14,17 @@ use Zakobo\WebhookOutbox\ValueObjects\Subscriber;
 /**
  * Delivery is at-least-once; a row is retried by `webhooks:relay` until it is marked enqueued.
  */
-final readonly class RelayWebhookOutboxAction
+class RelayWebhookOutboxAction
 {
     public function __construct(
-        private SubscriberRegistry $subscriberRegistry,
+        private readonly SubscriberRegistry $subscriberRegistry,
     ) {}
 
     /**
      * @param  list<int>|null  $outboxMessageIds  Limits the sweep to these ids; null relays every un-enqueued row.
      * @return int Count of rows actually enqueued during this call.
      */
-    public function execute(?array $outboxMessageIds = null): int
+    final public function execute(?array $outboxMessageIds = null): int
     {
         $unqueuedOutboxMessageQuery = WebhookOutboxMessage::query()->unqueued();
 
@@ -112,9 +112,20 @@ final readonly class RelayWebhookOutboxAction
         Subscriber $subscriber,
         array $context,
     ): void {
+        $this->webhookCallFor($outboxMessage, $subscriber)->meta($context)->dispatch();
+    }
+
+    /**
+     * Extension point for queue, timeout, tries, backoff, proxy, extra headers and the like. An override must not
+     * change the payload or the signing: a replay resends the stored body byte-for-byte and receivers verify the
+     * `Signature` header against it. The package applies the call's meta after this method, so an override cannot
+     * break the outcome recorder or the delivery logger.
+     */
+    protected function webhookCallFor(WebhookOutboxMessage $outboxMessage, Subscriber $subscriber): OutgoingWebhookCall
+    {
         $headerPrefix = config('webhook-outbox.header_prefix');
 
-        OutgoingWebhookCall::create()
+        return OutgoingWebhookCall::create()
             ->url($subscriber->url)
             ->payload($outboxMessage->payload)
             ->useSecret($subscriber->signingSecret)
@@ -122,9 +133,7 @@ final readonly class RelayWebhookOutboxAction
             ->withHeaders([
                 $headerPrefix.'-Event' => $outboxMessage->event,
                 $headerPrefix.'-Subscriber' => $subscriber->name,
-            ])
-            ->meta($context)
-            ->dispatch();
+            ]);
     }
 
     /**
