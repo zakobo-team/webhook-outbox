@@ -105,6 +105,10 @@ class RelayWebhookOutboxAction
     }
 
     /**
+     * The row may only be marked enqueued once the queue has accepted the job, whatever the application's
+     * `after_commit` setting. Without `beforeCommit()` an after-commit queue would hold the push until this
+     * transaction has committed `enqueued_at`, and a failed push would leave the row marked but never sent.
+     *
      * @param  array<string, mixed>  $context
      */
     private function dispatchWebhookCall(
@@ -112,7 +116,7 @@ class RelayWebhookOutboxAction
         Subscriber $subscriber,
         array $context,
     ): void {
-        $this->webhookCallFor($outboxMessage, $subscriber)->meta($context)->dispatch();
+        $this->webhookCallFor($outboxMessage, $subscriber)->meta($context)->dispatch()->beforeCommit();
     }
 
     /**

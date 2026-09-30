@@ -29,5 +29,6 @@ abstract class TestCase extends OrchestraTestCase
     protected function defineDatabaseMigrations(): void
     {
         $this->app->make('migrator')->path(__DIR__.'/../database/migrations');
+        $this->app->make('migrator')->path(__DIR__.'/Migrations');
     }
 }
