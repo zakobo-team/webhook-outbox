@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - src/
+        - tests/
+        - config/
+        - database/
+
+    level: 6
+
+    phpVersion: 80400
+
+    noEnvCallsOutsideOfConfig: false

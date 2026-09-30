@@ -1,0 +1,57 @@
+{
+    "name": "zakobo/webhook-outbox",
+    "description": "Transactional outbox for Laravel webhooks: durable, at-least-once, signed webhook delivery.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "illuminate/console": "^13.0",
+        "illuminate/contracts": "^13.0",
+        "illuminate/database": "^13.0",
+        "illuminate/support": "^13.0",
+        "spatie/laravel-webhook-server": "^3.10"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.29",
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zakobo\\WebhookOutbox\\": "src/",
+            "Zakobo\\WebhookOutbox\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Zakobo\\WebhookOutbox\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "./vendor/bin/phpunit"
+        ],
+        "analyse": [
+            "./vendor/bin/phpstan analyse --memory-limit=2G"
+        ],
+        "lint": [
+            "./vendor/bin/pint --parallel"
+        ],
+        "lint:check": [
+            "./vendor/bin/pint --test"
+        ],
+        "lint:dirty": [
+            "./vendor/bin/pint --dirty"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Zakobo\\WebhookOutbox\\WebhookOutboxServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
