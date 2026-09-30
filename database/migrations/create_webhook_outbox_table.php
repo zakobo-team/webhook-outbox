@@ -10,9 +10,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $schema = Schema::connection(config('outbox.connection'));
+        $schema = Schema::connection(config('webhook-outbox.connection'));
 
-        $schema->create(config('outbox.table'), function (Blueprint $table): void {
+        $schema->create(config('webhook-outbox.table'), function (Blueprint $table): void {
             $table->id();
             $table->uuid('event_id');
             $table->string('event');
@@ -37,6 +37,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::connection(config('outbox.connection'))->dropIfExists(config('outbox.table'));
+        Schema::connection(config('webhook-outbox.connection'))->dropIfExists(config('webhook-outbox.table'));
     }
 };

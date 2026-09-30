@@ -1,6 +1,6 @@
-# Outbox for Laravel
+# Webhook Outbox for Laravel
 
-A transactional webhook outbox for Laravel. A webhook is written to a database table in the same transaction as the
+A transactional outbox for webhooks in Laravel. A webhook is written to a database table in the same transaction as the
 change that triggered it, handed to the queue after commit, and swept up by a scheduled command if that hand-off was
 missed. Delivery, retries and signing are done by
 [spatie/laravel-webhook-server](https://github.com/spatie/laravel-webhook-server).
@@ -17,10 +17,10 @@ The package is not on Packagist. Require it from the Git repository:
 ```json
 {
     "repositories": [
-        { "type": "vcs", "url": "https://github.com/zakobo-team/outbox-for-laravel" }
+        { "type": "vcs", "url": "https://github.com/zakobo-team/webhook-outbox" }
     ],
     "require": {
-        "zakobo/outbox-for-laravel": "0.1.0"
+        "zakobo/webhook-outbox": "0.1.0"
     }
 }
 ```
@@ -32,8 +32,8 @@ commands, listens to spatie's webhook events to record outcomes and write delive
 Publish the config and the migration, then migrate:
 
 ```bash
-php artisan vendor:publish --tag=outbox-config
-php artisan vendor:publish --tag=outbox-migrations
+php artisan vendor:publish --tag=webhook-outbox-config
+php artisan vendor:publish --tag=webhook-outbox-migrations
 php artisan migrate
 ```
 
@@ -42,11 +42,11 @@ migration. The package never loads its migration on its own.
 
 ## Configuration
 
-`config/outbox.php`:
+`config/webhook-outbox.php`:
 
 | Key                | Default                          | Meaning                                                                           |
 |--------------------|----------------------------------|-----------------------------------------------------------------------------------|
-| `connection`       | `env('OUTBOX_DB_CONNECTION')` (`null`) | Connection holding the outbox table. `null` is the application's default connection. |
+| `connection`       | `env('WEBHOOK_OUTBOX_DB_CONNECTION')` (`null`) | Connection holding the outbox table. `null` is the application's default connection. |
 | `table`            | `webhook_outbox`                 | Outbox table name.                                                                |
 | `header_prefix`    | `X-Zakobo-Webhook`               | Delivery headers are `{prefix}-Event` and `{prefix}-Subscriber`.                  |
 | `prune_after_days` | `90`                             | Rows older than this are pruned (bodies can carry personal data).                 |
@@ -76,9 +76,9 @@ to send a webhook.
 ## Dispatching a webhook
 
 ```php
-use Zakobo\Outbox\Actions\DispatchWebhookAction;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\ValueObjects\WebhookEvent;
+use Zakobo\WebhookOutbox\Actions\DispatchWebhookAction;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\ValueObjects\WebhookEvent;
 
 WebhookOutboxMessage::outboxConnection()->transaction(function () use ($invoiceId, $dispatchWebhook) {
     $invoice = Invoice::query()->lockForUpdate()->findOrFail($invoiceId);
@@ -136,7 +136,7 @@ previous writer committed.
 The service provider registers this schedule, so the application needs no entries of its own:
 
 - `webhooks:relay` every minute, without overlapping;
-- `model:prune` for `Zakobo\Outbox\Models\WebhookOutboxMessage` daily, without overlapping.
+- `model:prune` for `Zakobo\WebhookOutbox\Models\WebhookOutboxMessage` daily, without overlapping.
 
 The scheduler (`schedule:work` or a `schedule:run` cron entry) and a queue worker must be running.
 
@@ -154,7 +154,7 @@ A receiver of these webhooks must:
 ## Testing
 
 The suite runs against MySQL, since `skip locked` and MySQL's changed-rows semantics cannot be tested on SQLite. It
-needs a database, by default `outbox_for_laravel_testing` on `127.0.0.1` as `root` without a password, overridable
+needs a database, by default `webhook_outbox_testing` on `127.0.0.1` as `root` without a password, overridable
 with `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD`:
 
 ```bash

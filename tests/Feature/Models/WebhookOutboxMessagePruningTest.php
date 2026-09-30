@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature\Models;
+namespace Zakobo\WebhookOutbox\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Tests\TestCase;
 
 final class WebhookOutboxMessagePruningTest extends TestCase
 {
@@ -16,7 +16,7 @@ final class WebhookOutboxMessagePruningTest extends TestCase
     #[Test]
     public function the_retention_follows_the_prune_after_days_config(): void
     {
-        config(['outbox.prune_after_days' => 30]);
+        config(['webhook-outbox.prune_after_days' => 30]);
         $old = WebhookOutboxMessage::factory()->succeeded()->create(['created_at' => now()->subDays(31)]);
         $recent = WebhookOutboxMessage::factory()->succeeded()->create(['created_at' => now()->subDays(29)]);
 

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Actions;
+namespace Zakobo\WebhookOutbox\Actions;
 
 use Throwable;
-use Zakobo\Outbox\Enums\WebhookOutboxStatus;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Support\SubscriberRegistry;
-use Zakobo\Outbox\ValueObjects\Subscriber;
-use Zakobo\Outbox\ValueObjects\WebhookEvent;
+use Zakobo\WebhookOutbox\Enums\WebhookOutboxStatus;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Support\SubscriberRegistry;
+use Zakobo\WebhookOutbox\ValueObjects\Subscriber;
+use Zakobo\WebhookOutbox\ValueObjects\WebhookEvent;
 
 /**
  * Delivery is at-least-once (a crash between the outbox commit and the queue dispatch is retried by

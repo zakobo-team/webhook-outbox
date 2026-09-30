@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Concerns;
+namespace Zakobo\WebhookOutbox\Tests\Concerns;
 
 use Closure;
 use Illuminate\Database\Connection;

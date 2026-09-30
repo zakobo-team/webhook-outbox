@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Console\Commands;
+namespace Zakobo\WebhookOutbox\Console\Commands;
 
 use Illuminate\Console\Command;
 use Throwable;
-use Zakobo\Outbox\Actions\ReplayWebhookOutboxMessageAction;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Actions\ReplayWebhookOutboxMessageAction;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
 
 final class ReplayWebhookOutboxCommand extends Command
 {

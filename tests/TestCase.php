@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests;
+namespace Zakobo\WebhookOutbox\Tests;
 
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Spatie\WebhookServer\WebhookServerServiceProvider;
-use Zakobo\Outbox\OutboxServiceProvider;
+use Zakobo\WebhookOutbox\WebhookOutboxServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
@@ -17,7 +17,7 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             WebhookServerServiceProvider::class,
-            OutboxServiceProvider::class,
+            WebhookOutboxServiceProvider::class,
         ];
     }
 

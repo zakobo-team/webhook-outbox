@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Actions;
+namespace Zakobo\WebhookOutbox\Actions;
 
 use RuntimeException;
-use Zakobo\Outbox\Exceptions\WebhookSubscriberNotConfiguredException;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Support\SubscriberRegistry;
+use Zakobo\WebhookOutbox\Exceptions\WebhookSubscriberNotConfiguredException;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Support\SubscriberRegistry;
 
 /**
  * A resend is safe: receivers dedupe on `event_id`. With `$onlyWhenFailed`, returns false when a concurrent

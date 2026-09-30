@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Actions;
+namespace Zakobo\WebhookOutbox\Actions;
 
 use Illuminate\Support\Facades\Log;
 use Spatie\WebhookServer\WebhookCall as OutgoingWebhookCall;
 use Throwable;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Support\SubscriberRegistry;
-use Zakobo\Outbox\ValueObjects\Subscriber;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Support\SubscriberRegistry;
+use Zakobo\WebhookOutbox\ValueObjects\Subscriber;
 
 /**
  * Delivery is at-least-once; a row is retried by `webhooks:relay` until it is marked enqueued.
@@ -112,7 +112,7 @@ final readonly class RelayWebhookOutboxAction
         Subscriber $subscriber,
         array $context,
     ): void {
-        $headerPrefix = config('outbox.header_prefix');
+        $headerPrefix = config('webhook-outbox.header_prefix');
 
         OutgoingWebhookCall::create()
             ->url($subscriber->url)

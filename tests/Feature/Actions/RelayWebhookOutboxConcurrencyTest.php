@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature\Actions;
+namespace Zakobo\WebhookOutbox\Tests\Feature\Actions;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\WebhookServer\CallWebhookJob;
-use Zakobo\Outbox\Actions\RelayWebhookOutboxAction;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Support\SubscriberRegistry;
-use Zakobo\Outbox\Tests\Concerns\RunsConcurrentProcesses;
-use Zakobo\Outbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\Actions\RelayWebhookOutboxAction;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Support\SubscriberRegistry;
+use Zakobo\WebhookOutbox\Tests\Concerns\RunsConcurrentProcesses;
+use Zakobo\WebhookOutbox\Tests\TestCase;
 
 /**
  * Two relay sweeps can legitimately overlap: the fast path right after a commit and the scheduled
@@ -30,7 +30,7 @@ final class RelayWebhookOutboxConcurrencyTest extends TestCase
     #[Test]
     public function two_concurrent_relay_sweeps_over_the_same_rows_enqueue_each_row_exactly_once(): void
     {
-        config(['outbox.subscribers' => self::subscribers()]);
+        config(['webhook-outbox.subscribers' => self::subscribers()]);
         $firstOutboxMessage = WebhookOutboxMessage::factory()->create([
             'subscriber' => 'auth',
             'event' => 'thing.happened',
@@ -44,7 +44,7 @@ final class RelayWebhookOutboxConcurrencyTest extends TestCase
         $this->withCommittedFixtures(
             test: function () use ($outboxMessageIds): void {
                 $relayTask = static function () use ($outboxMessageIds): int {
-                    config(['outbox.subscribers' => self::subscribers()]);
+                    config(['webhook-outbox.subscribers' => self::subscribers()]);
                     app()->forgetInstance(SubscriberRegistry::class);
                     Bus::fake([CallWebhookJob::class]);
 

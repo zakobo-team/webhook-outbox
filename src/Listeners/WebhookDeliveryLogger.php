@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Listeners;
+namespace Zakobo\WebhookOutbox\Listeners;
 
 use Illuminate\Support\Facades\Log;
 use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;

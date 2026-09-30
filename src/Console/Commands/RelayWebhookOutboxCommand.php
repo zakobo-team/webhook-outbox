@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Console\Commands;
+namespace Zakobo\WebhookOutbox\Console\Commands;
 
 use Illuminate\Console\Command;
-use Zakobo\Outbox\Actions\RelayWebhookOutboxAction;
+use Zakobo\WebhookOutbox\Actions\RelayWebhookOutboxAction;
 
 final class RelayWebhookOutboxCommand extends Command
 {

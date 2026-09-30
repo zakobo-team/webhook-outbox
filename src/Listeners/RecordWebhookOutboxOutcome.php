@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Listeners;
+namespace Zakobo\WebhookOutbox\Listeners;
 
 use Closure;
 use Spatie\WebhookServer\Events\FinalWebhookCallFailedEvent;
@@ -10,7 +10,7 @@ use Spatie\WebhookServer\Events\WebhookCallEvent;
 use Spatie\WebhookServer\Events\WebhookCallFailedEvent;
 use Spatie\WebhookServer\Events\WebhookCallSucceededEvent;
 use Throwable;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
 
 /**
  * Spatie's CallWebhookJob dispatches WebhookCallSucceededEvent inside its own try/catch(Exception): a throwable

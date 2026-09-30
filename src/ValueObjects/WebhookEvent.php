@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\ValueObjects;
+namespace Zakobo\WebhookOutbox\ValueObjects;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;

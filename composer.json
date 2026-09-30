@@ -1,6 +1,6 @@
 {
-    "name": "zakobo/outbox-for-laravel",
-    "description": "Transactional webhook outbox for Laravel: durable, at-least-once, signed webhook delivery.",
+    "name": "zakobo/webhook-outbox",
+    "description": "Transactional outbox for Laravel webhooks: durable, at-least-once, signed webhook delivery.",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -19,13 +19,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Zakobo\\Outbox\\": "src/",
-            "Zakobo\\Outbox\\Database\\Factories\\": "database/factories/"
+            "Zakobo\\WebhookOutbox\\": "src/",
+            "Zakobo\\WebhookOutbox\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Zakobo\\Outbox\\Tests\\": "tests/"
+            "Zakobo\\WebhookOutbox\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -48,7 +48,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Zakobo\\Outbox\\OutboxServiceProvider"
+                "Zakobo\\WebhookOutbox\\WebhookOutboxServiceProvider"
             ]
         }
     },

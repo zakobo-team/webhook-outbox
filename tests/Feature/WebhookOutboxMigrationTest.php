@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature;
+namespace Zakobo\WebhookOutbox\Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\Test;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Tests\TestCase;
 
 /**
  * DDL implicitly commits in MySQL, so this class runs without the per-test transaction and drops what it creates.
  */
-final class OutboxMigrationTest extends TestCase
+final class WebhookOutboxMigrationTest extends TestCase
 {
     private const string CUSTOM_TABLE = 'custom_outbox_messages';
 
@@ -27,7 +27,7 @@ final class OutboxMigrationTest extends TestCase
     #[Test]
     public function it_creates_the_final_schema_under_the_configured_table_name_with_derived_index_names(): void
     {
-        config(['outbox.table' => self::CUSTOM_TABLE]);
+        config(['webhook-outbox.table' => self::CUSTOM_TABLE]);
 
         $this->runOutboxMigration('up');
 
@@ -50,7 +50,7 @@ final class OutboxMigrationTest extends TestCase
     #[Test]
     public function down_drops_the_table(): void
     {
-        config(['outbox.table' => self::CUSTOM_TABLE]);
+        config(['webhook-outbox.table' => self::CUSTOM_TABLE]);
         $this->runOutboxMigration('up');
 
         $this->runOutboxMigration('down');
@@ -64,8 +64,8 @@ final class OutboxMigrationTest extends TestCase
         config([
             'database.connections.unrelated' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''],
             'database.default' => 'unrelated',
-            'outbox.connection' => 'mysql',
-            'outbox.table' => self::CUSTOM_TABLE,
+            'webhook-outbox.connection' => 'mysql',
+            'webhook-outbox.table' => self::CUSTOM_TABLE,
         ]);
 
         $this->runOutboxMigration('up');

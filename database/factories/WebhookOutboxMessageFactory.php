@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Database\Factories;
+namespace Zakobo\WebhookOutbox\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Zakobo\Outbox\Enums\WebhookOutboxStatus;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Enums\WebhookOutboxStatus;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
 
 /** @extends Factory<WebhookOutboxMessage> */
 class WebhookOutboxMessageFactory extends Factory

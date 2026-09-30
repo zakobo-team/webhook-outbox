@@ -7,7 +7,7 @@ return [
      * Database connection holding the outbox table. Null uses the application's default connection. Every
      * sender must run its business transaction on this connection so the outbox rows commit or roll back with it.
      */
-    'connection' => env('OUTBOX_DB_CONNECTION'),
+    'connection' => env('WEBHOOK_OUTBOX_DB_CONNECTION'),
 
     'table' => 'webhook_outbox',
 

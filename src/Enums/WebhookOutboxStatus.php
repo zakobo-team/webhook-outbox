@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Enums;
+namespace Zakobo\WebhookOutbox\Enums;
 
 enum WebhookOutboxStatus: string
 {

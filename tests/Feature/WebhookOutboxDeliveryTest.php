@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature;
+namespace Zakobo\WebhookOutbox\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\WebhookServer\CallWebhookJob;
-use Zakobo\Outbox\Actions\DispatchWebhookAction;
-use Zakobo\Outbox\Tests\TestCase;
-use Zakobo\Outbox\ValueObjects\WebhookEvent;
+use Zakobo\WebhookOutbox\Actions\DispatchWebhookAction;
+use Zakobo\WebhookOutbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\ValueObjects\WebhookEvent;
 
-final class OutboxDeliveryTest extends TestCase
+final class WebhookOutboxDeliveryTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -45,7 +45,7 @@ final class OutboxDeliveryTest extends TestCase
     #[Test]
     public function the_header_prefix_config_renames_the_event_and_subscriber_headers(): void
     {
-        config(['outbox.header_prefix' => 'X-Acme-Hook']);
+        config(['webhook-outbox.header_prefix' => 'X-Acme-Hook']);
 
         $webhookJob = $this->dispatchThingHappened();
 
@@ -58,7 +58,7 @@ final class OutboxDeliveryTest extends TestCase
     private function dispatchThingHappened(): CallWebhookJob
     {
         Bus::fake();
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks',
                 'signing_secret' => 'auth-secret',

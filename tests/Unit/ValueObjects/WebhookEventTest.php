@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Unit\ValueObjects;
+namespace Zakobo\WebhookOutbox\Tests\Unit\ValueObjects;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
-use Zakobo\Outbox\Tests\TestCase;
-use Zakobo\Outbox\ValueObjects\WebhookEvent;
+use Zakobo\WebhookOutbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\ValueObjects\WebhookEvent;
 
 final class WebhookEventTest extends TestCase
 {

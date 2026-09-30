@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Support;
+namespace Zakobo\WebhookOutbox\Support;
 
-use Zakobo\Outbox\Exceptions\InvalidWebhookConfigException;
-use Zakobo\Outbox\ValueObjects\Subscriber;
+use Zakobo\WebhookOutbox\Exceptions\InvalidWebhookConfigException;
+use Zakobo\WebhookOutbox\ValueObjects\Subscriber;
 
 final readonly class SubscriberRegistry
 {

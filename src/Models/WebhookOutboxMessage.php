@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Models;
+namespace Zakobo\WebhookOutbox\Models;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Zakobo\Outbox\Database\Factories\WebhookOutboxMessageFactory;
-use Zakobo\Outbox\Enums\WebhookOutboxStatus;
+use Zakobo\WebhookOutbox\Database\Factories\WebhookOutboxMessageFactory;
+use Zakobo\WebhookOutbox\Enums\WebhookOutboxStatus;
 
 /**
  * @property int $id
@@ -58,12 +58,12 @@ class WebhookOutboxMessage extends Model
 
     public function getConnectionName(): ?string
     {
-        return config('outbox.connection');
+        return config('webhook-outbox.connection');
     }
 
     public function getTable(): string
     {
-        return config('outbox.table');
+        return config('webhook-outbox.table');
     }
 
     protected function casts(): array
@@ -101,7 +101,7 @@ class WebhookOutboxMessage extends Model
      */
     public function prunable(): Builder
     {
-        return static::query()->where('created_at', '<=', now()->subDays(config('outbox.prune_after_days')));
+        return static::query()->where('created_at', '<=', now()->subDays(config('webhook-outbox.prune_after_days')));
     }
 
     public static function recordSuccessById(int $id, int $attempt, ?int $statusCode): void

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature;
+namespace Zakobo\WebhookOutbox\Tests\Feature;
 
 use Closure;
 use GuzzleHttp\Psr7\Response;
@@ -14,8 +14,8 @@ use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;
 use Spatie\WebhookServer\Events\FinalWebhookCallFailedEvent;
 use Spatie\WebhookServer\Events\WebhookCallFailedEvent;
 use Spatie\WebhookServer\Events\WebhookCallSucceededEvent;
-use Zakobo\Outbox\Listeners\WebhookDeliveryLogger;
-use Zakobo\Outbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\Listeners\WebhookDeliveryLogger;
+use Zakobo\WebhookOutbox\Tests\TestCase;
 
 final class WebhookDeliveryLoggerTest extends TestCase
 {

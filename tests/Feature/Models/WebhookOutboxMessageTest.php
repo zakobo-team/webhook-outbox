@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature\Models;
+namespace Zakobo\WebhookOutbox\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
-use Zakobo\Outbox\Enums\WebhookOutboxStatus;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\Enums\WebhookOutboxStatus;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Tests\TestCase;
 
 final class WebhookOutboxMessageTest extends TestCase
 {

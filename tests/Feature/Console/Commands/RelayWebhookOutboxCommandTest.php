@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature\Console\Commands;
+namespace Zakobo\WebhookOutbox\Tests\Feature\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,8 +13,8 @@ use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Spatie\WebhookServer\CallWebhookJob;
 use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Tests\TestCase;
 
 final class RelayWebhookOutboxCommandTest extends TestCase
 {
@@ -24,7 +24,7 @@ final class RelayWebhookOutboxCommandTest extends TestCase
     {
         parent::setUp();
 
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks',
                 'signing_secret' => 'auth-secret',

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Unit\Support;
+namespace Zakobo\WebhookOutbox\Tests\Unit\Support;
 
 use PHPUnit\Framework\Attributes\Test;
-use Zakobo\Outbox\Exceptions\InvalidWebhookConfigException;
-use Zakobo\Outbox\Support\SubscriberRegistry;
-use Zakobo\Outbox\Tests\TestCase;
-use Zakobo\Outbox\ValueObjects\Subscriber;
+use Zakobo\WebhookOutbox\Exceptions\InvalidWebhookConfigException;
+use Zakobo\WebhookOutbox\Support\SubscriberRegistry;
+use Zakobo\WebhookOutbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\ValueObjects\Subscriber;
 
 final class SubscriberRegistryTest extends TestCase
 {

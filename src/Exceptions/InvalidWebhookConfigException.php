@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Exceptions;
+namespace Zakobo\WebhookOutbox\Exceptions;
 
 use RuntimeException;
 

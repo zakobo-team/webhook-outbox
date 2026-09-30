@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature\Listeners;
+namespace Zakobo\WebhookOutbox\Tests\Feature\Listeners;
 
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Database\QueryException;
@@ -13,10 +13,10 @@ use PHPUnit\Framework\Attributes\Test;
 use Spatie\WebhookServer\Events\FinalWebhookCallFailedEvent;
 use Spatie\WebhookServer\Events\WebhookCallFailedEvent;
 use Spatie\WebhookServer\Events\WebhookCallSucceededEvent;
-use Zakobo\Outbox\Enums\WebhookOutboxStatus;
-use Zakobo\Outbox\Listeners\RecordWebhookOutboxOutcome;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\Enums\WebhookOutboxStatus;
+use Zakobo\WebhookOutbox\Listeners\RecordWebhookOutboxOutcome;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Tests\TestCase;
 
 final class RecordWebhookOutboxOutcomeTest extends TestCase
 {

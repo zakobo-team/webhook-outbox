@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature;
+namespace Zakobo\WebhookOutbox\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Spatie\WebhookServer\CallWebhookJob;
-use Zakobo\Outbox\Actions\DispatchWebhookAction;
-use Zakobo\Outbox\Actions\RelayWebhookOutboxAction;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Tests\TestCase;
-use Zakobo\Outbox\ValueObjects\WebhookEvent;
+use Zakobo\WebhookOutbox\Actions\DispatchWebhookAction;
+use Zakobo\WebhookOutbox\Actions\RelayWebhookOutboxAction;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\ValueObjects\WebhookEvent;
 
 /**
  * The application's default connection is switched to an unrelated SQLite database while `outbox.connection`
@@ -36,8 +36,8 @@ final class ConfiguredConnectionTest extends TestCase
             'database.connections.unrelated' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => ''],
             'database.connections.outbox' => config('database.connections.mysql'),
             'database.default' => 'unrelated',
-            'outbox.connection' => 'outbox',
-            'outbox.subscribers' => [
+            'webhook-outbox.connection' => 'outbox',
+            'webhook-outbox.subscribers' => [
                 'auth' => [
                     'url' => 'https://auth.example.test/webhooks',
                     'signing_secret' => 'auth-secret',

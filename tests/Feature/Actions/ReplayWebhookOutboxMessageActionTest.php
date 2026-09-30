@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature\Actions;
+namespace Zakobo\WebhookOutbox\Tests\Feature\Actions;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -13,13 +13,13 @@ use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Spatie\WebhookServer\CallWebhookJob;
 use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;
-use Zakobo\Outbox\Actions\DispatchWebhookAction;
-use Zakobo\Outbox\Actions\ReplayWebhookOutboxMessageAction;
-use Zakobo\Outbox\Enums\WebhookOutboxStatus;
-use Zakobo\Outbox\Exceptions\WebhookSubscriberNotConfiguredException;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Tests\TestCase;
-use Zakobo\Outbox\ValueObjects\WebhookEvent;
+use Zakobo\WebhookOutbox\Actions\DispatchWebhookAction;
+use Zakobo\WebhookOutbox\Actions\ReplayWebhookOutboxMessageAction;
+use Zakobo\WebhookOutbox\Enums\WebhookOutboxStatus;
+use Zakobo\WebhookOutbox\Exceptions\WebhookSubscriberNotConfiguredException;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\ValueObjects\WebhookEvent;
 
 final class ReplayWebhookOutboxMessageActionTest extends TestCase
 {
@@ -29,7 +29,7 @@ final class ReplayWebhookOutboxMessageActionTest extends TestCase
     public function it_resends_the_same_event_id_and_body_to_the_subscribers_current_url(): void
     {
         Bus::fake();
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks-v2',
                 'signing_secret' => 'auth-secret',
@@ -67,7 +67,7 @@ final class ReplayWebhookOutboxMessageActionTest extends TestCase
     public function it_replays_by_id_regardless_of_the_messages_current_status(): void
     {
         Bus::fake();
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks-v2',
                 'signing_secret' => 'auth-secret',
@@ -89,7 +89,7 @@ final class ReplayWebhookOutboxMessageActionTest extends TestCase
     public function only_when_failed_claims_a_failed_message_and_resends_it(): void
     {
         Bus::fake();
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks',
                 'signing_secret' => 'auth-secret',
@@ -111,7 +111,7 @@ final class ReplayWebhookOutboxMessageActionTest extends TestCase
     public function only_when_failed_skips_a_message_that_is_no_longer_failed_without_claiming_it(): void
     {
         Bus::fake();
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks',
                 'signing_secret' => 'auth-secret',
@@ -136,7 +136,7 @@ final class ReplayWebhookOutboxMessageActionTest extends TestCase
     public function only_when_failed_claiming_an_already_claimed_message_returns_false_without_resending(): void
     {
         Bus::fake();
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks',
                 'signing_secret' => 'auth-secret',
@@ -160,7 +160,7 @@ final class ReplayWebhookOutboxMessageActionTest extends TestCase
     public function replaying_for_an_unconfigured_subscriber_is_rejected_without_claiming(): void
     {
         Bus::fake();
-        config(['outbox.subscribers' => []]);
+        config(['webhook-outbox.subscribers' => []]);
         $outboxMessage = WebhookOutboxMessage::factory()->failed()->create([
             'event' => 'thing.happened',
             'subscriber' => 'auth',
@@ -181,7 +181,7 @@ final class ReplayWebhookOutboxMessageActionTest extends TestCase
     {
         Bus::fake();
         Exceptions::fake();
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks',
                 'signing_secret' => 'auth-secret',
@@ -219,7 +219,7 @@ final class ReplayWebhookOutboxMessageActionTest extends TestCase
     public function a_replay_dispatches_the_exact_same_body_bytes_as_the_original_send(): void
     {
         Bus::fake();
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks',
                 'signing_secret' => 'auth-secret',

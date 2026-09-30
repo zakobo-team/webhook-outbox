@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox;
+namespace Zakobo\WebhookOutbox;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Event;
@@ -11,22 +11,22 @@ use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;
 use Spatie\WebhookServer\Events\FinalWebhookCallFailedEvent;
 use Spatie\WebhookServer\Events\WebhookCallFailedEvent;
 use Spatie\WebhookServer\Events\WebhookCallSucceededEvent;
-use Zakobo\Outbox\Console\Commands\RelayWebhookOutboxCommand;
-use Zakobo\Outbox\Console\Commands\ReplayWebhookOutboxCommand;
-use Zakobo\Outbox\Listeners\RecordWebhookOutboxOutcome;
-use Zakobo\Outbox\Listeners\WebhookDeliveryLogger;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\Support\SubscriberRegistry;
+use Zakobo\WebhookOutbox\Console\Commands\RelayWebhookOutboxCommand;
+use Zakobo\WebhookOutbox\Console\Commands\ReplayWebhookOutboxCommand;
+use Zakobo\WebhookOutbox\Listeners\RecordWebhookOutboxOutcome;
+use Zakobo\WebhookOutbox\Listeners\WebhookDeliveryLogger;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Support\SubscriberRegistry;
 
-class OutboxServiceProvider extends ServiceProvider
+class WebhookOutboxServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/outbox.php', 'outbox');
+        $this->mergeConfigFrom(__DIR__.'/../config/webhook-outbox.php', 'webhook-outbox');
 
         $this->app->bind(
             SubscriberRegistry::class,
-            fn (): SubscriberRegistry => SubscriberRegistry::fromConfig(config('outbox.subscribers')),
+            fn (): SubscriberRegistry => SubscriberRegistry::fromConfig(config('webhook-outbox.subscribers')),
         );
     }
 
@@ -47,12 +47,15 @@ class OutboxServiceProvider extends ServiceProvider
                 ReplayWebhookOutboxCommand::class,
             ]);
 
-            $this->publishes([__DIR__.'/../config/outbox.php' => config_path('outbox.php')], 'outbox-config');
+            $this->publishes(
+                [__DIR__.'/../config/webhook-outbox.php' => config_path('webhook-outbox.php')],
+                'webhook-outbox-config',
+            );
             $this->publishes([
                 __DIR__.'/../database/migrations/create_webhook_outbox_table.php' => database_path(
                     'migrations/'.date('Y_m_d_His').'_create_webhook_outbox_table.php',
                 ),
-            ], 'outbox-migrations');
+            ], 'webhook-outbox-migrations');
         }
     }
 

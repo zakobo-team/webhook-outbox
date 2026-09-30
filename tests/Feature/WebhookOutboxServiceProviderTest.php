@@ -2,34 +2,34 @@
 
 declare(strict_types=1);
 
-namespace Zakobo\Outbox\Tests\Feature;
+namespace Zakobo\WebhookOutbox\Tests\Feature;
 
 use Illuminate\Console\Scheduling\Event as ScheduledEvent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\ServiceProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Zakobo\Outbox\Exceptions\InvalidWebhookConfigException;
-use Zakobo\Outbox\Models\WebhookOutboxMessage;
-use Zakobo\Outbox\OutboxServiceProvider;
-use Zakobo\Outbox\Support\SubscriberRegistry;
-use Zakobo\Outbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\Exceptions\InvalidWebhookConfigException;
+use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Support\SubscriberRegistry;
+use Zakobo\WebhookOutbox\Tests\TestCase;
+use Zakobo\WebhookOutbox\WebhookOutboxServiceProvider;
 
-final class OutboxServiceProviderTest extends TestCase
+final class WebhookOutboxServiceProviderTest extends TestCase
 {
     #[Test]
     public function the_shipped_config_defaults_are_merged(): void
     {
-        $this->assertNull(config('outbox.connection'));
-        $this->assertSame('webhook_outbox', config('outbox.table'));
-        $this->assertSame('X-Zakobo-Webhook', config('outbox.header_prefix'));
-        $this->assertSame(90, config('outbox.prune_after_days'));
-        $this->assertSame([], config('outbox.subscribers'));
+        $this->assertNull(config('webhook-outbox.connection'));
+        $this->assertSame('webhook_outbox', config('webhook-outbox.table'));
+        $this->assertSame('X-Zakobo-Webhook', config('webhook-outbox.header_prefix'));
+        $this->assertSame(90, config('webhook-outbox.prune_after_days'));
+        $this->assertSame([], config('webhook-outbox.subscribers'));
     }
 
     #[Test]
     public function the_subscriber_registry_resolves_from_the_configured_subscribers(): void
     {
-        config(['outbox.subscribers' => [
+        config(['webhook-outbox.subscribers' => [
             'auth' => ['url' => 'https://auth.example.test/webhooks', 'signing_secret' => 'secret', 'events' => '*'],
         ]]);
 
@@ -39,12 +39,12 @@ final class OutboxServiceProviderTest extends TestCase
     #[Test]
     public function booting_the_provider_with_an_invalid_config_fails_the_boot(): void
     {
-        config(['outbox.subscribers' => ['auth' => ['url' => 'https://auth.example.test/webhooks']]]);
+        config(['webhook-outbox.subscribers' => ['auth' => ['url' => 'https://auth.example.test/webhooks']]]);
 
         $this->expectException(InvalidWebhookConfigException::class);
         $this->expectExceptionMessage('Webhook subscriber [auth] must declare which events it subscribes to');
 
-        (new OutboxServiceProvider($this->app))->boot();
+        (new WebhookOutboxServiceProvider($this->app))->boot();
     }
 
     #[Test]
@@ -69,10 +69,13 @@ final class OutboxServiceProviderTest extends TestCase
     #[Test]
     public function the_config_and_the_migration_are_publishable_under_their_own_tags(): void
     {
-        $configPaths = ServiceProvider::pathsToPublish(OutboxServiceProvider::class, 'outbox-config');
-        $migrationPaths = ServiceProvider::pathsToPublish(OutboxServiceProvider::class, 'outbox-migrations');
+        $configPaths = ServiceProvider::pathsToPublish(WebhookOutboxServiceProvider::class, 'webhook-outbox-config');
+        $migrationPaths = ServiceProvider::pathsToPublish(
+            WebhookOutboxServiceProvider::class,
+            'webhook-outbox-migrations',
+        );
 
-        $this->assertSame([config_path('outbox.php')], array_values($configPaths));
+        $this->assertSame([config_path('webhook-outbox.php')], array_values($configPaths));
         $this->assertCount(1, $migrationPaths);
         $this->assertMatchesRegularExpression(
             '/migrations\/\d{4}_\d{2}_\d{2}_\d{6}_create_webhook_outbox_table\.php$/',
