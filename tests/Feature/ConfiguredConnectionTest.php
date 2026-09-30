@@ -19,7 +19,7 @@ use Zakobo\Outbox\ValueObjects\WebhookEvent;
 /**
  * The application's default connection is switched to an unrelated SQLite database while `outbox.connection`
  * points at a second connection to the MySQL test database, like an app whose default connection changes per
- * context (tenancy). Every outbox read, write, transaction and after-commit hook must follow the configured one.
+ * context. Every outbox read, write, transaction and after-commit hook must follow the configured one.
  * The outbox connection is a separate PDO, so its rows commit for real and are deleted in `finally`.
  */
 final class ConfiguredConnectionTest extends TestCase
