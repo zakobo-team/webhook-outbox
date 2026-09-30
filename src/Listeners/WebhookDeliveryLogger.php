@@ -15,31 +15,42 @@ class WebhookDeliveryLogger
 {
     public function handleDispatchingWebhookCallEvent(DispatchingWebhookCallEvent $event): void
     {
-        $this->log('info', 'Webhook dispatching.', $event);
+        $this->logIfOurs('info', 'Webhook dispatching.', $event);
     }
 
     public function handleWebhookCallSucceededEvent(WebhookCallSucceededEvent $event): void
     {
-        $this->log('info', 'Webhook delivered.', $event);
+        $this->logIfOurs('info', 'Webhook delivered.', $event);
     }
 
     public function handleWebhookCallFailedEvent(WebhookCallFailedEvent $event): void
     {
-        $this->log('warning', 'Webhook delivery failed.', $event);
+        $this->logIfOurs('warning', 'Webhook delivery failed.', $event);
     }
 
     public function handleFinalWebhookCallFailedEvent(FinalWebhookCallFailedEvent $event): void
     {
-        $this->log('critical', 'Webhook final delivery failed.', $event);
+        $this->logIfOurs('critical', 'Webhook final delivery failed.', $event);
     }
 
-    protected function log(string $level, string $message, DispatchingWebhookCallEvent|WebhookCallEvent $event): void
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    protected function log(string $level, string $message, array $context): void
     {
+        Log::{$level}($message, $context);
+    }
+
+    private function logIfOurs(
+        string $level,
+        string $message,
+        DispatchingWebhookCallEvent|WebhookCallEvent $event,
+    ): void {
         if (! $this->isOurs($event->meta)) {
             return;
         }
 
-        Log::{$level}($message, $this->context($event));
+        $this->log($level, $message, $this->context($event));
     }
 
     /**

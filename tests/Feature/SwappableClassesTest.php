@@ -23,6 +23,7 @@ use Zakobo\WebhookOutbox\Listeners\RecordWebhookOutboxOutcome;
 use Zakobo\WebhookOutbox\Listeners\WebhookDeliveryLogger;
 use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
 use Zakobo\WebhookOutbox\Tests\Fixtures\FieldAddingWebhookDeliveryLogger;
+use Zakobo\WebhookOutbox\Tests\Fixtures\LogOverridingWebhookDeliveryLogger;
 use Zakobo\WebhookOutbox\Tests\Fixtures\MetaOverridingRelayWebhookOutboxAction;
 use Zakobo\WebhookOutbox\Tests\Fixtures\QueueingRelayWebhookOutboxAction;
 use Zakobo\WebhookOutbox\Tests\TestCase;
@@ -38,6 +39,7 @@ final class SwappableClassesTest extends TestCase
         parent::setUp();
 
         QueueingRelayWebhookOutboxAction::$customizedFor = [];
+        LogOverridingWebhookDeliveryLogger::$logged = [];
         config(['webhook-outbox.subscribers' => [
             'auth' => [
                 'url' => 'https://auth.example.test/webhooks',
@@ -163,6 +165,48 @@ final class SwappableClassesTest extends TestCase
                 && $context['event_id'] === 'e-1');
     }
 
+    #[Test]
+    public function a_foreign_webhook_call_never_reaches_an_overridden_log_method(): void
+    {
+        config(['webhook-outbox.classes.delivery_logger' => LogOverridingWebhookDeliveryLogger::class]);
+
+        event(new WebhookCallSucceededEvent(
+            'post',
+            'https://other.example.test/webhooks',
+            [],
+            [],
+            ['event' => 'other.updated'],
+            [],
+            1,
+            new Response(204),
+            null,
+            null,
+            'webhook-foreign',
+            null,
+        ));
+        $loggedForTheForeignCall = $this->loggedByTheOverride();
+        $this->assertSame([], $loggedForTheForeignCall);
+
+        event(new WebhookCallSucceededEvent(
+            'post',
+            'https://auth.example.test/webhooks',
+            [],
+            [],
+            ['event' => 'thing.happened', 'event_id' => 'e-1', 'subscriber' => 'auth'],
+            [],
+            1,
+            new Response(204),
+            null,
+            null,
+            'webhook-ours',
+            null,
+        ));
+        $logged = $this->loggedByTheOverride();
+        $this->assertCount(1, $logged);
+        $this->assertSame('info', $logged[0][0]);
+        $this->assertSame('e-1', $logged[0][2]['event_id']);
+    }
+
     /**
      * @return array<string, array{string, string}>
      */
@@ -196,6 +240,14 @@ final class SwappableClassesTest extends TestCase
     private function useRelayAction(string $relayActionClass): void
     {
         config(['webhook-outbox.classes.relay_action' => $relayActionClass]);
+    }
+
+    /**
+     * @return list<array{string, string, array<string, mixed>}>
+     */
+    private function loggedByTheOverride(): array
+    {
+        return LogOverridingWebhookDeliveryLogger::$logged;
     }
 
     private function dispatchThroughTheFastPath(): void

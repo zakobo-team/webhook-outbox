@@ -209,26 +209,23 @@ receivers verify the `Signature` header against it. The package also applies the
 
 ### The delivery logger
 
-Override `log()` to change the channel or the levels, `context()` to change the fields, or any of the four `handle…`
-methods:
+Override `log()` to change the channel, `context()` to change the fields, or any of the four `handle…` methods:
 
 ```php
 use Illuminate\Support\Facades\Log;
-use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;
-use Spatie\WebhookServer\Events\WebhookCallEvent;
 use Zakobo\WebhookOutbox\Listeners\WebhookDeliveryLogger;
 
 class AppWebhookDeliveryLogger extends WebhookDeliveryLogger
 {
-    protected function log(string $level, string $message, DispatchingWebhookCallEvent|WebhookCallEvent $event): void
+    protected function log(string $level, string $message, array $context): void
     {
-        Log::channel('webhooks')->{$level}($message, $this->context($event));
+        Log::channel('webhooks')->{$level}($message, $context);
     }
 }
 ```
 
 The listeners are registered against the configured class, so the replacement receives Spatie's events. Events from
-webhook calls that did not come from the outbox are still ignored.
+webhook calls that did not come from the outbox never reach `log()`: the package filters them out first.
 
 ## Receiver contract
 

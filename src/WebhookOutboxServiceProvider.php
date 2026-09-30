@@ -38,10 +38,12 @@ class WebhookOutboxServiceProvider extends ServiceProvider
         );
 
         foreach (self::SWAPPABLE_CLASSES as $configKey => $originalClass) {
-            $this->app->bind(
-                $originalClass,
-                fn (Application $app): object => $app->build(self::configuredClass($configKey, $originalClass)),
-            );
+            $this->app->bind($originalClass, function (Application $app) use ($configKey, $originalClass): object {
+                /** @var class-string $configuredClass */
+                $configuredClass = config("webhook-outbox.classes.{$configKey}", $originalClass);
+
+                return $app->build($configuredClass);
+            });
         }
     }
 
@@ -86,21 +88,6 @@ class WebhookOutboxServiceProvider extends ServiceProvider
                 );
             }
         }
-    }
-
-    /**
-     * @template TClass of object
-     *
-     * @param  class-string<TClass>  $originalClass
-     * @return class-string<TClass>
-     */
-    private static function configuredClass(string $configKey, string $originalClass): string
-    {
-        $configuredClass = config("webhook-outbox.classes.{$configKey}", $originalClass);
-
-        return is_string($configuredClass) && is_a($configuredClass, $originalClass, true)
-            ? $configuredClass
-            : $originalClass;
     }
 
     private function registerListeners(): void
