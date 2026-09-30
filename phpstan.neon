@@ -11,3 +11,5 @@ parameters:
     level: 6
 
     phpVersion: 80400
+
+    noEnvCallsOutsideOfConfig: false
