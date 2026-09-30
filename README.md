@@ -20,7 +20,7 @@ The package is not on Packagist. Require it from the Git repository:
         { "type": "vcs", "url": "https://github.com/zakobo-team/outbox-for-laravel" }
     ],
     "require": {
-        "zakobo/outbox-for-laravel": "v0.1.0"
+        "zakobo/outbox-for-laravel": "0.1.0"
     }
 }
 ```
