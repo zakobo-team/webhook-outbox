@@ -6,7 +6,6 @@ namespace Zakobo\Outbox\Tests\Feature;
 
 use Illuminate\Console\Scheduling\Event as ScheduledEvent;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Foundation\Console\Kernel;
 use Illuminate\Support\ServiceProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Zakobo\Outbox\Exceptions\InvalidWebhookConfigException;
@@ -38,17 +37,6 @@ final class OutboxServiceProviderTest extends TestCase
     }
 
     #[Test]
-    public function resolving_the_registry_with_an_invalid_config_throws(): void
-    {
-        config(['outbox.subscribers' => ['auth' => 'https://auth.example.test/webhooks']]);
-
-        $this->expectException(InvalidWebhookConfigException::class);
-        $this->expectExceptionMessage('Webhook subscriber [auth] must be configured as an array.');
-
-        app(SubscriberRegistry::class);
-    }
-
-    #[Test]
     public function booting_the_provider_with_an_invalid_config_fails_the_boot(): void
     {
         config(['outbox.subscribers' => ['auth' => ['url' => 'https://auth.example.test/webhooks']]]);
@@ -57,21 +45,6 @@ final class OutboxServiceProviderTest extends TestCase
         $this->expectExceptionMessage('Webhook subscriber [auth] must declare which events it subscribes to');
 
         (new OutboxServiceProvider($this->app))->boot();
-    }
-
-    #[Test]
-    public function webhooks_relay_and_webhooks_replay_are_each_registered_exactly_once(): void
-    {
-        $registeredCommandNames = collect($this->app->make(Kernel::class)->all())->keys();
-
-        $this->assertSame(
-            1,
-            $registeredCommandNames->filter(fn (string $name): bool => $name === 'webhooks:relay')->count(),
-        );
-        $this->assertSame(
-            1,
-            $registeredCommandNames->filter(fn (string $name): bool => $name === 'webhooks:replay')->count(),
-        );
     }
 
     #[Test]

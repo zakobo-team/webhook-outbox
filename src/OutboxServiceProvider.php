@@ -58,35 +58,23 @@ class OutboxServiceProvider extends ServiceProvider
 
     private function registerListeners(): void
     {
-        Event::listen(
-            WebhookCallSucceededEvent::class,
-            [RecordWebhookOutboxOutcome::class, 'handleWebhookCallSucceededEvent'],
-        );
-        Event::listen(
-            WebhookCallFailedEvent::class,
-            [RecordWebhookOutboxOutcome::class, 'handleWebhookCallFailedEvent'],
-        );
-        Event::listen(
-            FinalWebhookCallFailedEvent::class,
-            [RecordWebhookOutboxOutcome::class, 'handleFinalWebhookCallFailedEvent'],
-        );
+        $listeners = [
+            [WebhookCallSucceededEvent::class, RecordWebhookOutboxOutcome::class, 'handleWebhookCallSucceededEvent'],
+            [WebhookCallFailedEvent::class, RecordWebhookOutboxOutcome::class, 'handleWebhookCallFailedEvent'],
+            [
+                FinalWebhookCallFailedEvent::class,
+                RecordWebhookOutboxOutcome::class,
+                'handleFinalWebhookCallFailedEvent',
+            ],
+            [DispatchingWebhookCallEvent::class, WebhookDeliveryLogger::class, 'handleDispatchingWebhookCallEvent'],
+            [WebhookCallSucceededEvent::class, WebhookDeliveryLogger::class, 'handleWebhookCallSucceededEvent'],
+            [WebhookCallFailedEvent::class, WebhookDeliveryLogger::class, 'handleWebhookCallFailedEvent'],
+            [FinalWebhookCallFailedEvent::class, WebhookDeliveryLogger::class, 'handleFinalWebhookCallFailedEvent'],
+        ];
 
-        Event::listen(
-            DispatchingWebhookCallEvent::class,
-            [WebhookDeliveryLogger::class, 'handleDispatchingWebhookCallEvent'],
-        );
-        Event::listen(
-            WebhookCallSucceededEvent::class,
-            [WebhookDeliveryLogger::class, 'handleWebhookCallSucceededEvent'],
-        );
-        Event::listen(
-            WebhookCallFailedEvent::class,
-            [WebhookDeliveryLogger::class, 'handleWebhookCallFailedEvent'],
-        );
-        Event::listen(
-            FinalWebhookCallFailedEvent::class,
-            [WebhookDeliveryLogger::class, 'handleFinalWebhookCallFailedEvent'],
-        );
+        foreach ($listeners as [$eventClass, $listenerClass, $method]) {
+            Event::listen($eventClass, [$listenerClass, $method]);
+        }
     }
 
     private function registerSchedule(): void
