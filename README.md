@@ -17,7 +17,10 @@ The package is not on Packagist. Require it from the Git repository:
 ```json
 {
     "repositories": [
-        { "type": "vcs", "url": "https://github.com/zakobo-team/webhook-outbox" }
+        {
+            "type": "vcs",
+            "url": "https://github.com/zakobo-team/webhook-outbox"
+        }
     ],
     "require": {
         "zakobo/webhook-outbox": "0.1.0"
