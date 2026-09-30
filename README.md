@@ -26,8 +26,8 @@ The package is not on Packagist. Require it from the Git repository:
 ```
 
 The service provider is auto-discovered. It merges the config, registers the `webhooks:relay` and `webhooks:replay`
-commands, listens to spatie's webhook events to record outcomes and write delivery logs, and registers the schedule
-(see [Commands and schedule](#commands-and-schedule)).
+commands, listens to spatie's webhook events to record outcomes and write delivery logs, and schedules the daily
+prune (see [Commands and schedule](#commands-and-schedule)).
 
 Publish the config and the migration, then migrate:
 
@@ -35,6 +35,12 @@ Publish the config and the migration, then migrate:
 php artisan vendor:publish --tag=webhook-outbox-config
 php artisan vendor:publish --tag=webhook-outbox-migrations
 php artisan migrate
+```
+
+Then schedule the relay in your application, for example in `routes/console.php`. The package does not do this for you:
+
+```php
+Schedule::command('webhooks:relay')->everyMinute()->withoutOverlapping();
 ```
 
 An application that already has the outbox table (for example one that predates this package) must **not** publish the
@@ -133,10 +139,18 @@ previous writer committed.
 
 `webhooks:replay` needs either ids or `--failed`, not both, and ids must be positive integers of existing rows.
 
-The service provider registers this schedule, so the application needs no entries of its own:
+**The application must schedule the relay itself.** The package does not:
 
-- `webhooks:relay` every minute, without overlapping;
-- `model:prune` for `Zakobo\WebhookOutbox\Models\WebhookOutboxMessage` daily, without overlapping.
+```php
+// routes/console.php
+Schedule::command('webhooks:relay')->everyMinute()->withoutOverlapping();
+```
+
+Without it, a row the fast path missed (for example after a crash between commit and queue dispatch) is never
+retried.
+
+The package does schedule the prune: `model:prune` for `Zakobo\WebhookOutbox\Models\WebhookOutboxMessage` daily,
+without overlapping, deleting rows older than `prune_after_days`.
 
 The scheduler (`schedule:work` or a `schedule:run` cron entry) and a queue worker must be running.
 

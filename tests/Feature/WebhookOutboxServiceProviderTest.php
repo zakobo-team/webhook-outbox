@@ -48,12 +48,13 @@ final class WebhookOutboxServiceProviderTest extends TestCase
     }
 
     #[Test]
-    public function webhooks_relay_is_scheduled_every_minute_without_overlapping(): void
+    public function the_package_leaves_scheduling_webhooks_relay_to_the_application(): void
     {
-        $webhooksRelayEvent = $this->scheduledEventContaining('webhooks:relay');
+        $scheduledCommands = collect($this->app->make(Schedule::class)->events())->pluck('command');
 
-        $this->assertSame('* * * * *', $webhooksRelayEvent->expression);
-        $this->assertTrue($webhooksRelayEvent->withoutOverlapping);
+        $this->assertFalse($scheduledCommands->contains(
+            fn (?string $command): bool => $command !== null && str_contains($command, 'webhooks:relay'),
+        ));
     }
 
     #[Test]
