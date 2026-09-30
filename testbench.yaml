@@ -1,0 +1,6 @@
+providers:
+  - Spatie\WebhookServer\WebhookServerServiceProvider
+  - Zakobo\Outbox\OutboxServiceProvider
+
+env:
+  - DB_CONNECTION=mysql
