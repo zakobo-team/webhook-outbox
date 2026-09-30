@@ -105,7 +105,10 @@ final class ConfiguredConnectionTest extends TestCase
             $this->assertSame(1, $enqueuedCount);
             Bus::assertDispatchedTimes(CallWebhookJob::class, 1);
             $this->assertNotNull(
-                DB::connection('outbox')->table('webhook_outbox')->where('id', $outboxMessage->id)->value('enqueued_at'),
+                DB::connection('outbox')
+                    ->table('webhook_outbox')
+                    ->where('id', $outboxMessage->id)
+                    ->value('enqueued_at'),
             );
         } finally {
             $outboxMessage->delete();

@@ -55,8 +55,14 @@ final class RelayWebhookOutboxActionTest extends TestCase
     public function without_ids_it_picks_up_every_never_enqueued_row_and_returns_the_enqueued_count(): void
     {
         Bus::fake();
-        $firstUnqueued = WebhookOutboxMessage::factory()->create(['subscriber' => 'auth', 'event' => 'thing.happened']);
-        $secondUnqueued = WebhookOutboxMessage::factory()->create(['subscriber' => 'auth', 'event' => 'thing.happened']);
+        $firstUnqueued = WebhookOutboxMessage::factory()->create([
+            'subscriber' => 'auth',
+            'event' => 'thing.happened',
+        ]);
+        $secondUnqueued = WebhookOutboxMessage::factory()->create([
+            'subscriber' => 'auth',
+            'event' => 'thing.happened',
+        ]);
         $alreadyEnqueued = WebhookOutboxMessage::factory()->enqueued()->create([
             'subscriber' => 'auth',
             'event' => 'thing.happened',

@@ -10,7 +10,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::connection(config('outbox.connection'))->create(config('outbox.table'), function (Blueprint $table): void {
+        $schema = Schema::connection(config('outbox.connection'));
+
+        $schema->create(config('outbox.table'), function (Blueprint $table): void {
             $table->id();
             $table->uuid('event_id');
             $table->string('event');

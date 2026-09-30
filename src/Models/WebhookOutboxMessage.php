@@ -96,8 +96,9 @@ class WebhookOutboxMessage extends Model
     /**
      * Outbox message bodies can carry personal contact data, so they are not kept longer than the configured
      * `prune_after_days`.
+     *
+     * @return Builder<static>
      */
-    /** @return Builder<static> */
     public function prunable(): Builder
     {
         return static::query()->where('created_at', '<=', now()->subDays(config('outbox.prune_after_days')));
