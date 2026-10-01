@@ -40,7 +40,10 @@ final class WebhookOutboxMigrationTest extends TestCase
             Schema::getColumnListing(self::CUSTOM_TABLE),
         );
         $indexNames = array_column(Schema::getIndexes(self::CUSTOM_TABLE), 'name');
-        foreach (['event_id_subscriber_unique', 'status_index', 'created_at_index', 'enqueued_at_index'] as $suffix) {
+        $indexSuffixes = [
+            'event_id_subscriber_unique', 'status_updated_at_index', 'created_at_index', 'enqueued_at_index',
+        ];
+        foreach ($indexSuffixes as $suffix) {
             $this->assertContains(self::CUSTOM_TABLE.'_'.$suffix, $indexNames);
         }
         $this->assertSame(1, WebhookOutboxMessage::factory()->create()->id);

@@ -25,6 +25,12 @@ return [
     'prune_after_days' => 90,
 
     /*
+     * An enqueued message still pending after this many minutes without any write is marked failed by
+     * `webhooks:relay`, so `webhooks:replay --failed` picks it up. Must exceed the longest backoff wait (1 hour).
+     */
+    'stuck_after_minutes' => 120,
+
+    /*
      * Classes the package resolves from the container. A replacement must extend the listed class, like the
      * `signer` and `webhook_job` keys of spatie/laravel-webhook-server.
      */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Zakobo\WebhookOutbox\Tests\Unit\ValueObjects;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
@@ -49,9 +50,21 @@ final class WebhookEventTest extends TestCase
         $this->assertSame(['event', 'event_id', 'occurred_at', 'id', 'name'], array_keys($webhookEvent->body()));
         $this->assertSame('thing.created', $webhookEvent->body()['event']);
         $this->assertSame($webhookEvent->eventId, $webhookEvent->body()['event_id']);
-        $this->assertSame($webhookEvent->occurredAt->toIso8601String(), $webhookEvent->body()['occurred_at']);
         $this->assertSame('1', $webhookEvent->body()['id']);
         $this->assertSame('Widget', $webhookEvent->body()['name']);
+    }
+
+    #[Test]
+    public function occurred_at_carries_microseconds_so_events_in_the_same_second_stay_ordered(): void
+    {
+        $webhookEvent = new WebhookEvent(
+            'thing.created',
+            (string) Str::uuid(),
+            CarbonImmutable::parse('2026-10-01 12:00:00.123456', 'UTC'),
+            [],
+        );
+
+        $this->assertSame('2026-10-01T12:00:00.123456+00:00', $webhookEvent->body()['occurred_at']);
     }
 
     #[Test]

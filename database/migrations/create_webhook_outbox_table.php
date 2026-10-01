@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['event_id', 'subscriber']);
-            $table->index('status');
+            $table->index(['status', 'updated_at']);
             $table->index('created_at');
             $table->index('enqueued_at');
         });

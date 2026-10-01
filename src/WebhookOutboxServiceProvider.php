@@ -114,6 +114,7 @@ class WebhookOutboxServiceProvider extends ServiceProvider
     private function registerSchedule(): void
     {
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command('webhooks:relay')->everyMinute()->withoutOverlapping();
             $schedule->command('model:prune', ['--model' => [WebhookOutboxMessage::class]])
                 ->daily()
                 ->withoutOverlapping();

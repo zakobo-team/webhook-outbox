@@ -23,6 +23,7 @@ final class WebhookOutboxServiceProviderTest extends TestCase
         $this->assertSame('webhook_outbox', config('webhook-outbox.table'));
         $this->assertSame('X-Zakobo-Webhook', config('webhook-outbox.header_prefix'));
         $this->assertSame(90, config('webhook-outbox.prune_after_days'));
+        $this->assertSame(120, config('webhook-outbox.stuck_after_minutes'));
         $this->assertSame([], config('webhook-outbox.subscribers'));
     }
 
@@ -48,13 +49,12 @@ final class WebhookOutboxServiceProviderTest extends TestCase
     }
 
     #[Test]
-    public function the_package_leaves_scheduling_webhooks_relay_to_the_application(): void
+    public function the_relay_is_scheduled_every_minute_without_overlapping(): void
     {
-        $scheduledCommands = collect($this->app->make(Schedule::class)->events())->pluck('command');
+        $relayEvent = $this->scheduledEventContaining('webhooks:relay');
 
-        $this->assertFalse($scheduledCommands->contains(
-            fn (?string $command): bool => $command !== null && str_contains($command, 'webhooks:relay'),
-        ));
+        $this->assertSame('* * * * *', $relayEvent->expression);
+        $this->assertTrue($relayEvent->withoutOverlapping);
     }
 
     #[Test]
