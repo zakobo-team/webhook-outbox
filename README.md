@@ -29,8 +29,8 @@ The package is not on Packagist. Require it from the Git repository:
 ```
 
 The service provider is auto-discovered. It merges the config, registers the `webhooks:relay` and `webhooks:replay`
-commands, listens to spatie's webhook events to record outcomes and write delivery logs, and schedules the daily
-prune (see [Commands and schedule](#commands-and-schedule)).
+commands, listens to spatie's webhook events to record outcomes and write delivery logs, and schedules the relay and
+the daily prune (see [Commands and schedule](#commands-and-schedule)).
 
 Publish the config and the migration, then migrate:
 
@@ -40,14 +40,17 @@ php artisan vendor:publish --tag=webhook-outbox-migrations
 php artisan migrate
 ```
 
-Then schedule the relay in your application, for example in `routes/console.php`. The package does not do this for you:
+An application that already has the outbox table (for example one that predates this package) must **not** publish the
+migration. The package never loads its migration on its own. Such a table should get an index on
+`(status, updated_at)`, which the stuck-row check in `webhooks:relay` queries every minute. It covers what a
+single-column `status` index did, so that one can go:
 
 ```php
-Schedule::command('webhooks:relay')->everyMinute()->withoutOverlapping();
+Schema::table('webhook_outbox', function (Blueprint $table): void {
+    $table->index(['status', 'updated_at']);
+    $table->dropIndex(['status']);
+});
 ```
-
-An application that already has the outbox table (for example one that predates this package) must **not** publish the
-migration. The package never loads its migration on its own.
 
 ## Configuration
 
@@ -59,6 +62,7 @@ migration. The package never loads its migration on its own.
 | `table`            | `webhook_outbox`                 | Outbox table name.                                                                |
 | `header_prefix`    | `X-Zakobo-Webhook`               | Delivery headers are `{prefix}-Event` and `{prefix}-Subscriber`.                  |
 | `prune_after_days` | `90`                             | Rows older than this are pruned (bodies can carry personal data).                 |
+| `stuck_after_minutes` | `120`                         | An enqueued row still `pending` with no write for this long is marked `failed`. Must exceed the longest backoff wait (1 hour). |
 | `subscribers`      | `[]`                             | Receivers, keyed by name.                                                         |
 | `classes.relay_action` | `RelayWebhookOutboxAction`   | Class that builds and dispatches each webhook call. A replacement must extend it. |
 | `classes.delivery_logger` | `WebhookDeliveryLogger`   | Class that logs Spatie's webhook events. A replacement must extend it.            |
@@ -120,17 +124,28 @@ and each builds its payload from what it read before the other committed, the re
 snapshot that looks current. Locking the entity serialises the writers, so each outbox row is built from the state the
 previous writer committed.
 
+**Build the `WebhookEvent` after taking the lock**, as in the example above. `occurNow()` stamps `occurred_at` (with
+microseconds) at that moment, and receivers order events for the same entity by it. Built after the lock, a later
+change always carries a later `occurred_at`.
+
 ## Delivery guarantees
 
 - **At-least-once.** A row is marked enqueued only after its job has been dispatched, and `webhooks:relay` retries every
   row that is not. A row is never enqueued twice by concurrent sweeps: each is locked with `for update skip locked`
   and re-checked inside its own transaction.
-- **No ordering guarantee.** Events for the same entity can arrive out of order. There is no per-event sequence
-  number, so receivers should treat events as upserts where the last one applied wins; a stale snapshot is corrected
-  by the entity's next change.
-- **The relay retries without a cap.** A row whose enqueue keeps failing is retried on every sweep, forever. Once a job
-  is queued, spatie's own retry and backoff apply, and a message that exhausts them is marked `failed` and logged at
-  `critical`.
+- **No delivery-order guarantee, but events are orderable.** Events for the same entity can arrive out of order: a
+  retry after backoff, parallel queue workers or a `webhooks:replay` can deliver an older event after a newer one.
+  `occurred_at` (ISO 8601 with microseconds) increases per entity when senders follow the sender rule, so receivers
+  apply an event only when it is newer than what they stored (see [Receiver contract](#receiver-contract)).
+- **Retries for about 20 hours.** Each delivery is tried up to 24 times, waiting 10s, 1m, 5m, 30m, then hourly. A
+  message that exhausts them is marked `failed` and logged at `critical`. An override of `webhookCallFor()` can change
+  this with spatie's `maximumTries()` and `useBackoffStrategy()`; keep the longest wait below `stuck_after_minutes`.
+- **Lost outcomes are failed, not forgotten.** If the queue loses a job, or the worker dies or hits an `Error` on the
+  last attempt, spatie records no outcome. `webhooks:relay` marks every enqueued row that has stayed `pending` without
+  a write for `stuck_after_minutes` as `failed` and logs its id at `critical`, so `webhooks:replay --failed` resends it.
+  A delivery that still lands afterwards marks it `succeeded`.
+- **The relay retries enqueueing without a cap.** A row whose enqueue keeps failing is retried on every sweep, forever,
+  and logged at `error` each time.
 - A row whose subscriber is no longer configured (or no longer subscribes to the event) is dead-lettered: marked
   `failed` and enqueued, so it is not retried.
 
@@ -138,24 +153,18 @@ previous writer committed.
 
 | Command                                | Purpose                                                                                     |
 |----------------------------------------|---------------------------------------------------------------------------------------------|
-| `php artisan webhooks:relay`           | Relays every outbox row the fast path has not yet enqueued.                                 |
+| `php artisan webhooks:relay`           | Relays every outbox row the fast path has not yet enqueued, and marks stuck rows `failed`.  |
 | `php artisan webhooks:replay {ids*}`   | Resends the given rows verbatim (same `event_id` and body) to the subscriber's current URL. |
 | `php artisan webhooks:replay --failed` | Resends every `failed` row. `pending` rows must be replayed explicitly by id.               |
 
 `webhooks:replay` needs either ids or `--failed`, not both, and ids must be positive integers of existing rows.
 
-**The application must schedule the relay itself.** The package does not:
+The package schedules both commands itself:
 
-```php
-// routes/console.php
-Schedule::command('webhooks:relay')->everyMinute()->withoutOverlapping();
-```
-
-Without it, a row the fast path missed (for example after a crash between commit and queue dispatch) is never
-retried.
-
-The package does schedule the prune: `model:prune` for `Zakobo\WebhookOutbox\Models\WebhookOutboxMessage` daily,
-without overlapping, deleting rows older than `prune_after_days`.
+- `webhooks:relay` every minute, without overlapping. An application that scheduled it before this package did should
+  remove its own entry.
+- `model:prune` for `Zakobo\WebhookOutbox\Models\WebhookOutboxMessage` daily, without overlapping, deleting rows older
+  than `prune_after_days`.
 
 The scheduler (`schedule:work` or a `schedule:run` cron entry) and a queue worker must be running.
 
@@ -238,7 +247,26 @@ A receiver of these webhooks must:
   signing secret. Compare with `hash_equals` on the raw bytes, before decoding the JSON. `Timestamp` is informational
   only.
 - **Be idempotent on `event_id`.** Delivery is at-least-once, and a replay resends the same `event_id`.
-- **Tolerate out-of-order delivery** (see [Delivery guarantees](#delivery-guarantees)).
+- **Apply an event only if it is newer than what it stored.** Keep the last applied `occurred_at` per entity, in a
+  column with microsecond precision (`DATETIME(6)` in MySQL; a plain `DATETIME` truncates to seconds and lets events
+  in the same second collide). Create the entity when it is missing, otherwise update it only when the event's
+  `occurred_at` is later. Bind the parsed timestamp (UTC, with microseconds), not the raw string:
+
+  ```sql
+  -- creates the entity when it is missing; a no-op otherwise
+  INSERT IGNORE INTO users (id, ..., webhook_occurred_at) VALUES (:id, ..., :occurred_at);
+  -- applies the event only when it is newer; a no-op for the row just inserted
+  UPDATE users SET ..., webhook_occurred_at = :occurred_at
+  WHERE id = :id AND (webhook_occurred_at IS NULL OR webhook_occurred_at < :occurred_at);
+  ```
+
+  This rule assumes every event for the entity carries its full state. For events that carry only part of it
+  (`user.role_changed` next to `user.email_changed`), keep one `occurred_at` per event type instead, or an older role
+  change is skipped once a newer email change has been applied.
+
+- **Keep a tombstone for deleted entities.** Handle a delete event as a soft delete that also stores its
+  `occurred_at`, so a late update for the deleted entity is skipped instead of bringing it back. With one
+  `occurred_at` per event type, also skip every event older than the delete.
 - Respond with a 2xx status once the event is safely stored.
 
 ## Testing

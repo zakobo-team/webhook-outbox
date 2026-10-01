@@ -134,6 +134,31 @@ class WebhookOutboxMessage extends Model
     }
 
     /**
+     * Fails enqueued rows left pending past `stuck_after_minutes`; see the README's delivery guarantees.
+     *
+     * @return list<int> The ids marked failed.
+     */
+    public static function failStuck(): array
+    {
+        return self::outboxConnection()->transaction(function (): array {
+            $stuckOutboxMessageIds = static::query()
+                ->where('status', WebhookOutboxStatus::Pending)
+                ->where('updated_at', '<=', now()->subMinutes(config('webhook-outbox.stuck_after_minutes')))
+                ->whereNotNull('enqueued_at')
+                ->lock('for update skip locked')
+                ->pluck('id')
+                ->all();
+
+            static::query()->whereKey($stuckOutboxMessageIds)->update([
+                'status' => WebhookOutboxStatus::Failed,
+                'last_error' => 'Delivery outcome was never recorded.',
+            ]);
+
+            return $stuckOutboxMessageIds;
+        });
+    }
+
+    /**
      * Also called after a final failure (e.g. an unconfigured subscriber), which must not be retried.
      */
     public static function markEnqueuedById(int $id): void

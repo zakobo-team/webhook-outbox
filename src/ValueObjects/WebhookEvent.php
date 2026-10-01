@@ -61,7 +61,10 @@ final readonly class WebhookEvent
         return [
             'event' => $this->name,
             'event_id' => $this->eventId,
-            'occurred_at' => $this->occurredAt->toIso8601String(),
+            // ponytail: app-server wall clock, so ordering assumes clock skew below the entity-lock handoff, and two
+            // events built for one entity within the same microsecond tie (receivers keep the first). Stamp from the
+            // database clock (`now(6)`) if senders ever run on hosts with real skew.
+            'occurred_at' => $this->occurredAt->format('Y-m-d\TH:i:s.uP'),
             ...$this->payload,
         ];
     }

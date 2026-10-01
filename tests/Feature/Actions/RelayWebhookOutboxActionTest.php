@@ -16,6 +16,7 @@ use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;
 use Zakobo\WebhookOutbox\Actions\RelayWebhookOutboxAction;
 use Zakobo\WebhookOutbox\Enums\WebhookOutboxStatus;
 use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
+use Zakobo\WebhookOutbox\Support\WebhookBackoffStrategy;
 use Zakobo\WebhookOutbox\Tests\TestCase;
 
 final class RelayWebhookOutboxActionTest extends TestCase
@@ -49,6 +50,27 @@ final class RelayWebhookOutboxActionTest extends TestCase
         Bus::assertDispatched(fn (CallWebhookJob $job): bool => $job->meta['outbox_message_id'] === $second->id);
         $this->assertNotNull($first->fresh()->enqueued_at);
         $this->assertNotNull($second->fresh()->enqueued_at);
+    }
+
+    #[Test]
+    public function the_webhook_call_retries_on_the_package_backoff_schedule(): void
+    {
+        Bus::fake();
+        $backoffStrategy = new WebhookBackoffStrategy;
+        $outboxMessage = WebhookOutboxMessage::factory()->create();
+
+        app(RelayWebhookOutboxAction::class)->execute([$outboxMessage->id]);
+
+        Bus::assertDispatched(fn (CallWebhookJob $job): bool => $job->tries === WebhookBackoffStrategy::MAXIMUM_TRIES
+            && $job->backoffStrategyClass === WebhookBackoffStrategy::class);
+        $this->assertSame(
+            [10, 60, 300, 1800, 3600],
+            array_map($backoffStrategy->waitInSecondsAfterAttempt(...), range(1, 5)),
+        );
+        $this->assertLessThan(
+            config('webhook-outbox.stuck_after_minutes') * 60,
+            $backoffStrategy->waitInSecondsAfterAttempt(WebhookBackoffStrategy::MAXIMUM_TRIES),
+        );
     }
 
     #[Test]

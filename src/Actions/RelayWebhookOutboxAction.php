@@ -9,6 +9,7 @@ use Spatie\WebhookServer\WebhookCall as OutgoingWebhookCall;
 use Throwable;
 use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
 use Zakobo\WebhookOutbox\Support\SubscriberRegistry;
+use Zakobo\WebhookOutbox\Support\WebhookBackoffStrategy;
 use Zakobo\WebhookOutbox\ValueObjects\Subscriber;
 
 /**
@@ -134,6 +135,8 @@ class RelayWebhookOutboxAction
             ->payload($outboxMessage->payload)
             ->useSecret($subscriber->signingSecret)
             ->useTimestamp()
+            ->maximumTries(WebhookBackoffStrategy::MAXIMUM_TRIES)
+            ->useBackoffStrategy(WebhookBackoffStrategy::class)
             ->withHeaders([
                 $headerPrefix.'-Event' => $outboxMessage->event,
                 $headerPrefix.'-Subscriber' => $subscriber->name,

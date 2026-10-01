@@ -9,10 +9,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Spatie\WebhookServer\CallWebhookJob;
 use Spatie\WebhookServer\Events\DispatchingWebhookCallEvent;
+use Zakobo\WebhookOutbox\Enums\WebhookOutboxStatus;
 use Zakobo\WebhookOutbox\Models\WebhookOutboxMessage;
 use Zakobo\WebhookOutbox\Tests\TestCase;
 
@@ -62,6 +64,32 @@ final class RelayWebhookOutboxCommandTest extends TestCase
             ->assertExitCode(Command::SUCCESS);
 
         Bus::assertNotDispatched(CallWebhookJob::class);
+    }
+
+    #[Test]
+    public function it_fails_and_logs_enqueued_rows_left_pending_without_a_write_past_the_stuck_threshold(): void
+    {
+        Bus::fake();
+        $logSpy = Log::spy();
+        $stale = now()->subMinutes(121);
+        $stuck = WebhookOutboxMessage::factory()->enqueued()->create(['updated_at' => $stale]);
+        $stillRetrying = WebhookOutboxMessage::factory()->enqueued()->create(['updated_at' => $stale]);
+        WebhookOutboxMessage::recordFailedAttemptById($stillRetrying->id, 2, 503, 'Service unavailable');
+        $neverEnqueued = WebhookOutboxMessage::factory()->create(['updated_at' => $stale]);
+        $succeeded = WebhookOutboxMessage::factory()->succeeded()->create(['updated_at' => $stale]);
+
+        $this->artisan('webhooks:relay')
+            ->expectsOutputToContain('Marked 1 stuck outbox message(s) failed.')
+            ->assertExitCode(Command::SUCCESS);
+
+        $this->assertSame(WebhookOutboxStatus::Failed, $stuck->fresh()->status);
+        $this->assertSame('Delivery outcome was never recorded.', $stuck->fresh()->last_error);
+        $this->assertSame(WebhookOutboxStatus::Pending, $stillRetrying->fresh()->status);
+        $this->assertSame(WebhookOutboxStatus::Succeeded, $succeeded->fresh()->status);
+        $this->assertSame(WebhookOutboxStatus::Pending, $neverEnqueued->fresh()->status);
+        $logSpy->shouldHaveReceived('critical')
+            ->once()
+            ->withArgs(fn (string $message, array $context): bool => $context['outbox_message_ids'] === [$stuck->id]);
     }
 
     #[Test]
