@@ -7,3 +7,16 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+
+  - package-ecosystem: composer
+    directory: /
+    versioning-strategy: widen
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
