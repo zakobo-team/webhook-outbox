@@ -7,23 +7,31 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Code style
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@2.37.0
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           tools: composer:v2
           coverage: none
+        env:
+          fail-fast: true
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5.0.4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -33,25 +41,38 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-ansi --no-progress --no-scripts -q
 
+      - name: Cache Pint results
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/pint.cache
+          key: ${{ runner.os }}-pint-${{ hashFiles('**/*.php', 'pint.json', '!vendor/**') }}
+          restore-keys: |
+            ${{ runner.os }}-pint-
+
       - name: Run Pint
-        run: composer lint:check
+        run: mkdir -p build && vendor/bin/pint --test --parallel --cache-file=build/pint.cache
 
   analyse:
     name: Static analysis
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@2.37.0
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           tools: composer:v2
           coverage: none
+        env:
+          fail-fast: true
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5.0.4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -67,6 +88,7 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [lint, analyse]
 
     services:
@@ -84,18 +106,22 @@ jobs:
           --health-retries=10
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@2.37.0
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           extensions: mbstring, pdo, pdo_mysql, pdo_sqlite
           tools: composer:v2
           coverage: none
+        env:
+          fail-fast: true
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5.0.4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
