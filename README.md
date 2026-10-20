@@ -269,6 +269,17 @@ A receiver of these webhooks must:
   `occurred_at` per event type, also skip every event older than the delete.
 - Respond with a 2xx status once the event is safely stored.
 
+## AI agents
+
+The package ships a [Laravel Boost](https://github.com/laravel/boost) guideline and a skill,
+`webhook-outbox-development`, in `resources/boost`. To install them, run `php artisan boost:install` and select
+guidelines, skills and `zakobo/webhook-outbox`. When Boost is already installed, you can run
+`php artisan boost:update --discover` instead. A plain `boost:update` does not offer new packages: it reports success
+and installs nothing for this package.
+
+The guideline gives an agent the sender rules in each session and tells it to activate the skill. The skill tells an
+agent how to send, configure, extend, test and debug these webhooks.
+
 ## Testing
 
 The suite runs against MySQL, since `skip locked` and MySQL's changed-rows semantics cannot be tested on SQLite. It
