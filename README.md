@@ -272,8 +272,11 @@ A receiver of these webhooks must:
 ## AI agents
 
 The package ships a [Laravel Boost](https://github.com/laravel/boost) guideline and a skill,
-`webhook-outbox-development`, in `resources/boost`. In an application that uses Boost, run
-`php artisan boost:install` (or `boost:update` when Boost is already installed) and select `zakobo/webhook-outbox`.
+`webhook-outbox-development`, in `resources/boost`. To install them, run `php artisan boost:install` and select
+guidelines, skills and `zakobo/webhook-outbox`. When Boost is already installed, you can run
+`php artisan boost:update --discover` instead. A plain `boost:update` does not offer new packages: it reports success
+and installs nothing for this package.
+
 The guideline gives an agent the sender rules in each session and tells it to activate the skill. The skill tells an
 agent how to send, configure, extend, test and debug these webhooks.
 
