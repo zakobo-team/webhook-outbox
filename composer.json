@@ -9,7 +9,7 @@
         "illuminate/contracts": "^13.0",
         "illuminate/database": "^13.0",
         "illuminate/support": "^13.0",
-        "spatie/laravel-webhook-server": "^3.10"
+        "spatie/laravel-webhook-server": "^3.10 || ^4.0"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
